@@ -20,7 +20,7 @@ class CompletionOperator(BaseOperator):
     :param execution_date: Execution date for the dag (templated)
     :type execution_date: str or datetime.datetime
     """
-    template_fields = ('trigger_dag_id', 'execution_date')
+    template_fields = ('execution_date',)
     ui_color = '#ffefeb'
 
     @apply_defaults
@@ -42,7 +42,7 @@ class CompletionOperator(BaseOperator):
         import requests
         endpoint=conf.get('operators', 'completion_service_endpoint')  # type: str
         if endpoint:
-            r = requests.post(endpoint, json={"Dag": self.dag_id,
+            r = requests.post(endpoint, json={"dag": self.dag_id,
                                               "execution_time": self.execution_date,
                                               "conf": json.dumps(payload)})
             self.log.info("Called {} for {} with response code {}".format(endpoint, self.dag_id, r.status_code))
