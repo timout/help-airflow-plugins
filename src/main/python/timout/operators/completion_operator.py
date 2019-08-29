@@ -63,8 +63,7 @@ class CompletionOperator(BaseOperator):
         elif execution_date is None:
             return execution_date
         else:
-            raise TypeError('Expected str or datetime.datetime type for execution_date. Got {}'.format(
-                type(execution_date)))
+            raise TypeError(f'Expected str or datetime.datetime type for execution_date. Got {execution_date}')
 
     def _get_endpoint(self, endpoint):
         if endpoint:
