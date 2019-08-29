@@ -19,8 +19,10 @@ class CompletionOperator(BaseOperator):
     :type python_callable: python callable
     :param execution_date: Execution date for the dag (templated)
     :type execution_date: str or datetime.datetime
+    :param endpoint: Completion Service Endpoint (templated)
+    :type endpoint: str
     """
-    template_fields = ('execution_date',)
+    template_fields = ('execution_date', 'endpoint')
     ui_color = '#ffefeb'
 
     @apply_defaults
@@ -28,26 +30,25 @@ class CompletionOperator(BaseOperator):
             self,
             python_callable=None,
             execution_date=None,
-            *args, **kwargs):
+            endpoint=None,
+            *args,
+            **kwargs):
         super(CompletionOperator, self).__init__(*args, **kwargs)
         self.python_callable = python_callable
         self.execution_date = self._get_execution_date(execution_date)
+        self.endpoint = self._get_endpoint(endpoint)
 
     def execute(self, context):
         payload = self._get_call_conf(context)
         self._call_service(payload)
-        self.log.info("Criteria not met, moving on")
 
     def _call_service(self, payload):
         import requests
-        endpoint=conf.get('operators', 'completion_service_endpoint')  # type: str
-        if endpoint:
-            r = requests.post(endpoint, json={"dag": self.dag_id,
-                                              "execution_time": self.execution_date,
-                                              "conf": json.dumps(payload)})
-            self.log.info("Called {} for {} with response code {}".format(endpoint, self.dag_id, r.status_code))
-        else:
-            self.log.info("operators.completion_service_endpoint is missing")
+        self.log.info(f"Calling {self.endpoint} for {self.dag_id}")
+        r = requests.post(self.endpoint, json={"dag": self.dag_id,
+                                          "execution_time": self.execution_date,
+                                          "conf": json.dumps(payload)})
+        self.log.info(f"Called {self.endpoint} for {self.dag_id} with response code {r.status_code}")
 
     def _get_call_conf(self, context):
         if self.python_callable is not None:
@@ -64,3 +65,11 @@ class CompletionOperator(BaseOperator):
         else:
             raise TypeError('Expected str or datetime.datetime type for execution_date. Got {}'.format(
                 type(execution_date)))
+
+    def _get_endpoint(self, endpoint):
+        if endpoint:
+            return endpoint
+        endpoint = conf.get('operators', 'completion_service_endpoint')  # type: str
+        if not endpoint:
+            raise TypeError('Parameter operators.completion_service_endpoint is missing')
+        return endpoint
