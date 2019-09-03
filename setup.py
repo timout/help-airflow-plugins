@@ -18,6 +18,7 @@ setup(
     packages=find_packages('src/main/python'),
     package_dir={'': 'src/main/python'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/main/python/*.py')],
+    test_suite='src/test/python',
     url='https://github.com/timout/help-airflow-plugins.git',
     author='timout'
 )
